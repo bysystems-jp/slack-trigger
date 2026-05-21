@@ -14,7 +14,7 @@ jobs:
           node-version: 26
 
       - run: |
-          if bin/today-is-after.ts 20; then
-            echo OK # TEST
+          if ! bin/today-is-after.ts 20; then
+            echo NOT OK # TEST
           fi
-          echo NOT OK # TEST
+          echo OK # TEST
