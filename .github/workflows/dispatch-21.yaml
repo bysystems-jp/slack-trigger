@@ -1,0 +1,20 @@
+on:
+  schedule:
+    - cron: '0 0 * * *'
+      timezone: Asia/Tokyo
+
+jobs:
+  trigger:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 26
+
+      - run: |
+          if bin/today-is-after.ts 20; then
+            echo OK # TEST
+          fi
+          echo NOT OK # TEST
