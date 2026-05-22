@@ -1,5 +1,9 @@
 on:
   schedule:
+  # TEST
+    - cron: '40 16 * * *'
+      timezone: Asia/Tokyo
+
     - cron: '0 9 * * *'
       timezone: Asia/Tokyo
 
