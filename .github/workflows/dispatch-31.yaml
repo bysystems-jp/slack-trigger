@@ -8,7 +8,7 @@ jobs:
   trigger:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@6
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -16,6 +16,8 @@ jobs:
 
       - run: |
           if ! bin/today-is-before.ts 31; then
-            echo NOT OK # TEST
+            exit 0
           fi
-          echo OK # TEST
+          echo $URLS | xargs -n1 curl -sSf
+        env:
+          URLS: ${{ secrets.D21 }}

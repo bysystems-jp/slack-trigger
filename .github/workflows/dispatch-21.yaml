@@ -16,6 +16,8 @@ jobs:
 
       - run: |
           if ! bin/today-is-after.ts 20; then
-            echo NOT OK # TEST
+            exit 0
           fi
-          echo OK # TEST
+          echo $URLS | xargs -n1 curl -sSf
+        env:
+          URLS: ${{ secrets.D31 }}
