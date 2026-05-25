@@ -1,13 +1,16 @@
 {
-  "type": "module",
-  "scripts": {
-    "test": "vitest"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.4.15",
-    "@tsconfig/strictest": "^2.0.8",
-    "@types/node": "^25.9.1",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
-  }
+	"type": "module",
+	"scripts": {
+		"test": "vitest",
+		"format": "biome format",
+		"lint": "biome lint",
+		"check": "biome check"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.15",
+		"@tsconfig/strictest": "^2.0.8",
+		"@types/node": "^25.9.1",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.7"
+	}
 }
