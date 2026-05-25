@@ -1,13 +1,13 @@
-function _today(): Temporal.PlainDate {
+export function today(): Temporal.PlainDate {
 	return Temporal.Now.instant().toZonedDateTimeISO("Asia/Tokyo").toPlainDate();
 }
 
 export class HolidayDetector {
 	static async instantiate(
-		date: Temporal.PlainDate,
+		year: number,
 		_fetch: (url: string) => Promise<Response> = fetch,
 	): Promise<HolidayDetector> {
-		const url = `https://holidays-jp.github.io/api/v1/${date.year}/date.json`;
+		const url = `https://holidays-jp.github.io/api/v1/${year}/date.json`;
 		const response = await _fetch(url);
 		if (!response.ok) {
 			throw new Error(`failed to fetch: ${response.status}`);
@@ -34,21 +34,14 @@ export class HolidayDetector {
 	}
 }
 
-async function isHoliday(date: Temporal.PlainDate): Promise<boolean> {
-	// https://holidays-jp.github.io/
-	const { default: holidays } = await import(`./date/${date.year}.json`, {
-		with: { type: "json" },
-	});
-	return date.toString() in holidays;
-}
-
-async function afterBusinessDay(
+function afterBusinessDay(
 	date: Temporal.PlainDate,
-): Promise<Temporal.PlainDate> {
+	detector: HolidayDetector,
+): Temporal.PlainDate {
 	while (
 		date.dayOfWeek === 6 ||
 		date.dayOfWeek === 7 ||
-		(await isHoliday(date))
+		detector.isHoliday(date)
 	) {
 		date = date.add({ days: 1 });
 	}
@@ -56,11 +49,12 @@ async function afterBusinessDay(
 	return date;
 }
 
-export async function isAfterBusinessDay(
+export function isAfterBusinessDay(
 	day: number,
-	today: Temporal.PlainDate = _today(),
-): Promise<boolean> {
-	const target = await afterBusinessDay(today.with({ day }));
+	today: Temporal.PlainDate,
+	detector: HolidayDetector,
+): boolean {
+	const target = afterBusinessDay(today.with({ day }), detector);
 	return target.equals(today);
 }
 
@@ -86,8 +80,9 @@ if (import.meta.vitest) {
 			[21, new Temporal.PlainDate(2026, 9, 25), false],
 		];
 
+		const detecotr = await HolidayDetector.instantiate(2026);
 		for (const t of tests) {
-			await expect(isAfterBusinessDay(t[0], t[1])).resolves.toBe(t[2]);
+			expect(isAfterBusinessDay(t[0], t[1], detecotr)).toBe(t[2]);
 		}
 	});
 }
