@@ -1,9 +1,11 @@
 {
+  "extends": ["@tsconfig/strictest/tsconfig.json"],
   "compilerOptions": {
     "target": "esnext",
     "module": "nodenext",
     "allowImportingTsExtensions": true,
     "strict": true,
+
     // needs typescript@6 disable node_modules scan
     "types": ["node", "vitest/importMeta"],
     "noEmit": true
