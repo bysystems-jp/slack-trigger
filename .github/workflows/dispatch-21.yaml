@@ -15,9 +15,9 @@ jobs:
           node-version: 26
 
       - run: |
-          if ! bin/today-is-after.ts 20; then
+          if ! bin/today-is-after.ts 21; then
             exit 0
           fi
-          echo $URLS | xargs -n1 curl -sSf
+          curl -sSf "$URL"
         env:
-          URLS: ${{ secrets.D31 }}
+          URL: ${{ secrets.D21 }}
