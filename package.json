@@ -1,16 +1,10 @@
 {
-	"type": "module",
-	"scripts": {
-		"test": "vitest",
-		"format": "biome format",
-		"lint": "biome lint",
-		"check": "biome check"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.4.15",
-		"@tsconfig/strictest": "^2.0.8",
-		"@types/node": "^25.9.1",
-		"typescript": "^6.0.3",
-		"vitest": "^4.1.7"
-	}
+  "type": "module",
+  "dependencies": {
+    "@aws-cdk/toolkit-lib": "1.26.2",
+    "aws-cdk-lib": "2.257.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1"
+  }
 }
