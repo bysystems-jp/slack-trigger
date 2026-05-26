@@ -20,7 +20,7 @@ class Main implements Callable<Void> {
     @CommandLine.Parameters(index = "1")
     private int day;
 
-    @CommandLine.Parameters(index = "2")
+    @CommandLine.Parameters(index = "2", defaultValue = "${env:SLACK_WF_URL}")
     private URI uri;
 
     LocalDate afterBusinessDay(LocalDate date, HolidayDetector detector) {

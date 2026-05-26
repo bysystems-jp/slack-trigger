@@ -3,6 +3,7 @@ plugins {
     application
     id("com.gradleup.shadow") version "9.4.1"
     id("com.diffplug.spotless") version "8.5.1"
+    id("co.uzzu.dotenv.gradle") version "4.0.0"
 }
 
 repositories {
@@ -21,12 +22,17 @@ application {
     mainClass = "jp.bysystems.slacktrigger.Main"
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 spotless {
     java {
         googleJavaFormat().aosp()
     }
+}
+
+tasks.run {
+    env.allVariables().forEach { environment(it.key, it.value) }
+}
+
+tasks.test {
+    env.allVariables().forEach { environment(it.key, it.value) }
+    useJUnitPlatform()
 }

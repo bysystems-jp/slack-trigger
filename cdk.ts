@@ -4,6 +4,11 @@ import * as core from "aws-cdk-lib/core";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as batch from "aws-cdk-lib/aws-batch";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
+import * as events from "aws-cdk-lib/aws-events";
+import * as eventst from "aws-cdk-lib/aws-events-targets";
 
 const outdir = new URL("./cdk.out", import.meta.url).pathname;
 
@@ -27,22 +32,6 @@ async function app(): ReturnType<AssemblyBuilder> {
     ],
   });
 
-  const container = new batch.EcsFargateContainerDefinition(stack, "BatchContainer", {
-    image: ecs.ContainerImage.fromAsset(new URL(".", import.meta.url).pathname),
-    cpu: 0.25,
-    memory: core.Size.mebibytes(512),
-    command: [
-      "before",
-      "26",
-      "http://example.com/",
-    ],
-    assignPublicIp: true,
-  });
-
-  const def = new batch.EcsJobDefinition(stack, "JobDefinition", {
-    container,
-  });
-
   const fargate = new batch.FargateComputeEnvironment(stack, "Fargate", {
     vpc,
     vpcSubnets: vpc.selectSubnets({
@@ -59,13 +48,58 @@ async function app(): ReturnType<AssemblyBuilder> {
     ],
   });
 
-  new core.CfnOutput(stack, "JobDefinitionArn", {
-    value: def.jobDefinitionArn,
+  const cron = new events.Rule(stack, "Cron", {
+    schedule: events.Schedule.cron({
+      hour: "0", // JST: 900
+      minute: "0",
+    }),
   });
 
-  new core.CfnOutput(stack, "JobQueueArn", {
-    value: queue.jobQueueArn,
+  const image = ecs.ContainerImage.fromAsset(new URL(".", import.meta.url).pathname, {
+    // Labor costs are higher!!
+    // platform: ecra.Platform.LINUX_ARM64,
   });
+
+  type Param = [["before" | "after", `${number}`], string];
+  const params: Param[] = [
+    [["after", "21"], "/slack-trigger/21url"],
+    [["before", "31"], "/slack-trigger/31url"],
+  ];
+
+  for (const [command, parameterName] of params) {
+    const name = command.join("");
+    const urlRef = ssm.StringParameter.fromSecureStringParameterAttributes(stack, `UrlRef${name}`, {
+      parameterName,
+    });
+
+    const container = new batch.EcsFargateContainerDefinition(stack, `BatchContainer${name}`, {
+      // fargateCpuArchitecture: ecs.CpuArchitecture.ARM64,
+      image,
+      cpu: 0.25,
+      memory: core.Size.mebibytes(512),
+      command,
+      secrets: {
+        SLACK_WF_URL: batch.Secret.fromSsmParameter(urlRef),
+      },
+      assignPublicIp: true,
+    });
+
+    const def = new batch.EcsJobDefinition(stack, `JobDefinition${name}`, {
+      container,
+    });
+
+    const launcherDef = new tasks.BatchSubmitJob(stack, `SubmitJob${name}`, {
+      jobName: name,
+      jobDefinitionArn: def.jobDefinitionArn,
+      jobQueueArn: queue.jobQueueArn,
+    });
+
+    const launcher = new sfn.StateMachine(stack, `Launcher${name}`, {
+      definitionBody: sfn.DefinitionBody.fromChainable(launcherDef),
+    });
+
+    cron.addTarget(new eventst.SfnStateMachine(launcher));
+  }
 
   return app.synth();
 }
