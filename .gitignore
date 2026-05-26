@@ -7,3 +7,5 @@ build
 # Ignore Kotlin plugin data
 .kotlin
 bin/
+node_modules/
+cdk.out/

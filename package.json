@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@aws-cdk/toolkit-lib": "1.26.2",
+    "aws-cdk-lib": "2.257.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1"
+  }
+}
